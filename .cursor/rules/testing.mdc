@@ -1,0 +1,96 @@
+---
+description: Unit test layout and conventions for true-toto (scan_meta_flags)
+globs: ["tests/**/*.c", "tests/**/*.h", "Makefile"]
+alwaysApply: false
+---
+
+# Testing — true-toto
+
+## Scope
+
+The Makefile `test` target builds and runs **`tests/test_core`** (or
+`tests/test_core.exe` on Windows).
+
+Tests cover **`scan_meta_flags()`** only. There are **no**
+subprocess/integration tests in-tree; the exit-code behaviour is not
+unit-tested directly.
+
+## Layout
+
+| File | Role |
+|------|------|
+| `tests/test_runner.c` | `main()` — invokes all suites in fixed order |
+| `tests/test_scan_no_args.c` / `.h` | no `argv` entries → `META_NONE` |
+| `tests/test_scan_help.c` / `.h` | `--help` → `META_HELP` |
+| `tests/test_scan_help_short.c` / `.h` | `--h` → `META_HELP` |
+| `tests/test_scan_version.c` / `.h` | `--version` → `META_VERSION` |
+| `tests/test_scan_version_short.c` / `.h` | `--v` → `META_VERSION` |
+| `tests/test_scan_help_wins.c` / `.h` | `--version` and `--help` both present → `META_HELP` |
+| `tests/test_scan_ignored_args.c` / `.h` | arbitrary / unknown args → `META_NONE` |
+
+One scenario per `.c` / `.h` pair; headers declare the test function for
+`test_runner.c`.
+
+## Framework
+
+- No external framework — plain C with `<assert.h>`.
+- Each case prints `PASS: <descriptive name>` on success.
+- `assert()` failure → `abort()` → non-zero exit from `make test`.
+
+## Build (from `Makefile`)
+
+```makefile
+tests/test_core: $(TEST_SRCS) src/true_toto_cli.c src/true_toto_emit.c \
+                 $(HDRS) $(wildcard tests/*.h)
+	$(CC) $(CFLAGS) -o $@ $(TEST_SRCS) \
+	    src/true_toto_cli.c src/true_toto_emit.c
+```
+
+Tests link `src/true_toto_cli.c` and `src/true_toto_emit.c` directly for
+access to `scan_meta_flags()`. `src/main.c` is **never** linked into the test
+binary.
+
+## Required cases (behaviour)
+
+1. **No args:** `scan_meta_flags(1, {"prog"})` → `META_NONE`.
+2. **`--help`:** `scan_meta_flags(2, {"prog", "--help"})` → `META_HELP`.
+3. **`--h`:** `scan_meta_flags(2, {"prog", "--h"})` → `META_HELP`.
+4. **`--version`:** `scan_meta_flags(2, {"prog", "--version"})` →
+   `META_VERSION`.
+5. **`--v`:** `scan_meta_flags(2, {"prog", "--v"})` → `META_VERSION`.
+6. **Help wins:** `scan_meta_flags(3, {"prog", "--version", "--help"})` →
+   `META_HELP`; also test the reversed order.
+7. **Ignored args:** `scan_meta_flags(3, {"prog", "foo", "--bar"})` →
+   `META_NONE`.
+
+## Adding tests
+
+- Add `tests/test_scan_<name>.c` + `.h`, declare the runner function in `.h`,
+  call it from `test_runner.c`, append both files to `TEST_SRCS` in
+  `Makefile`.
+- Keep tests allocation-free; stack `argv` arrays only.
+- `argv` arrays in tests must be `char *[]` (not `const char *[]`) to match
+  the `scan_meta_flags` signature; use mutable string literal arrays or
+  explicit `char` arrays.
+
+## Manual smoke tests (not automated)
+
+After `make`:
+
+```sh
+./true-toto
+echo $?                        # expect 0, no output
+
+./true-toto ignored args here
+echo $?                        # expect 0, no output
+
+./true-toto --version          # expect: true-toto <version>
+./true-toto --v                # same
+
+./true-toto --help             # expect: usage text
+./true-toto --h                # same
+
+./true-toto --help --version   # expect --help output (help wins)
+./true-toto --version --help   # expect --help output (help wins)
+```
+

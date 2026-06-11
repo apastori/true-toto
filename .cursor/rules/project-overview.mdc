@@ -1,0 +1,78 @@
+---
+description: Project identity, purpose, and high-level goals for `true-toto`
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# true-toto — Project Overview
+
+## What This Project Is
+
+`true-toto` is a faithful CLI replica of the GNU Core Utilities `true` command.
+It exits immediately with status code `0` (success), ignores every argument
+passed to it, and produces no output — except when invoked with `--help` or
+`--version`.
+
+## Binary Name
+
+The compiled binary must always be named **`true-toto`**. Never rename it.
+On Windows, MinGW may also emit `true-toto.exe`; that is the same program.
+
+## Platforms
+
+| Platform | Build environment | Notes |
+|----------|-------------------|-------|
+| **Linux** | `gcc`/`clang` + GNU Make | Full POSIX path |
+| **Windows** | **MSYS2 UCRT64** (recommended) | Native Windows `.exe`; no POSIX signal concerns |
+| **Git Bash** | Works if `/c/msys64/ucrt64/bin` is **before** Anaconda on `PATH` | Same binary as UCRT64; see `toolchain-structure.mdc` |
+
+Binaries are **not portable** across OSes — build separately on Linux and on Windows.
+
+## Scope — Keep It Minimal
+
+Supporting behaviour:
+
+- Built-in `--help` / `--h` and `--version` / `--v` (detected anywhere in
+  `argv`; help wins if both appear)
+- All other arguments (including `--foo`, `-`, arbitrary strings) are silently
+  ignored
+
+**Do not add**:
+
+- Interactive or TUI modes
+- stdin reading
+- Any output on the normal (no-flag) execution path
+- Logging or debug output in normal operation
+- Single-dash `-h` / `-v` (only `--help`, `--h`, `--version`, and `--v` are
+  special)
+- Any feature that would break GNU `true` behavioural compatibility
+
+## Behavioural Contract
+
+| Invocation | Behaviour |
+|---|---|
+| `true-toto` | exits `0` immediately; no output |
+| `true-toto any args here` | exits `0`; ignores all args; no output |
+| `true-toto --version` / `true-toto --v` | prints `true-toto <version>\n`, exits `0` |
+| `true-toto --help` / `true-toto --h` | prints usage on stdout, exits `0` |
+| `true-toto --help --version` | `--help` wins; prints usage, exits `0` |
+| `true-toto --version --help` | `--help` wins; prints usage, exits `0` |
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Always — normal exit, `--help`, `--version`, or any arguments |
+| `1` | Write failure when printing `--help` or `--version` text |
+
+## Project Layout (summary)
+
+```
+include/   — true_toto.h + true_toto_{emit,cli}.h
+src/       — main.c + true_toto_{emit,cli}.c
+tests/     — test_runner.c + test_scan_*.c / .h → binary tests/test_core
+```
+
+See `implementation.mdc`, `toolchain-structure.mdc`, and `testing.mdc` for
+detail.
+

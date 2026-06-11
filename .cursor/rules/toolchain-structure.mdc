@@ -1,0 +1,127 @@
+---
+description: C toolchain, build system, and directory structure for true-toto
+globs: ["Makefile", "*.c", "*.h", "src/**/*.c", "include/**/*.h", "tests/**/*.c"]
+alwaysApply: false
+---
+
+# Toolchain & Project Structure
+
+## Language
+
+**C11** (`-std=c11`). **No C++.**
+
+## Compiler flags (from `Makefile`)
+
+```
+-std=c11 -Wall -Wextra -Wpedantic -Werror
+-D_POSIX_C_SOURCE=200809L
+-Iinclude
+-O2          # release
+```
+
+Debug target adds `-g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer`.
+
+## Compiler selection
+
+`Makefile` picks **gcc** if available, else **clang**:
+
+```makefile
+CC := $(shell command -v gcc >/dev/null 2>&1 && echo gcc || echo clang)
+```
+
+## Build system
+
+**GNU Make** at repo root. Single link step for the main binary (no separate
+`.o` rules).
+
+| Target | Output |
+|--------|--------|
+| `make` / `all` | `true-toto` |
+| `make debug` | `true-toto-debug` |
+| `make test` | builds + runs `tests/test_core` |
+| `make clean` | removes `true-toto`, `true-toto-debug`, `tests/test_core` |
+| `make install` | `install -m 755 true-toto /usr/local/bin` (Linux/macOS; needs sudo) |
+
+**Main sources:** `src/main.c`, `src/true_toto_emit.c`, `src/true_toto_cli.c`
+
+**Test sources:** `tests/test_runner.c`, `tests/test_scan_no_args.c`,
+`tests/test_scan_help.c`, `tests/test_scan_help_short.c`,
+`tests/test_scan_version.c`, `tests/test_scan_version_short.c`,
+`tests/test_scan_help_wins.c`, `tests/test_scan_ignored_args.c`
+
+**Test binary also links:** `src/true_toto_cli.c`, `src/true_toto_emit.c`
+— but **not** `src/main.c`.
+
+## Dependencies
+
+**libc only** — no extra `-l` flags. POSIX headers: `unistd.h`, etc.
+
+## Directory layout
+
+```
+true-toto/
+├── LICENSE.txt          — GNU GPL v2 (full text)
+├── c_version.txt        — C11 / compiler / toolchain documentation
+├── .cursor/rules/
+├── Makefile
+├── README.md
+├── include/
+│   ├── true_toto.h
+│   ├── true_toto_emit.h
+│   └── true_toto_cli.h
+├── src/
+│   ├── main.c
+│   ├── true_toto_emit.c
+│   └── true_toto_cli.c
+└── tests/
+    ├── test_runner.c
+    ├── test_scan_no_args.c / .h
+    ├── test_scan_help.c / .h
+    ├── test_scan_help_short.c / .h
+    ├── test_scan_version.c / .h
+    ├── test_scan_version_short.c / .h
+    ├── test_scan_help_wins.c / .h
+    └── test_scan_ignored_args.c / .h
+```
+
+Build artefacts (`true-toto`, `true-toto.exe`, `tests/test_core`,
+`tests/test_core.exe`) are gitignored.
+
+## Building on Linux
+
+```sh
+make clean && make && make test
+```
+
+## Building on Windows (MSYS2 UCRT64)
+
+**Recommended:** open **MSYS2 UCRT64** from the Start menu:
+
+```sh
+pacman -S make mingw-w64-ucrt-x86_64-gcc   # once
+cd /path/to/true-toto
+make clean && make && make test
+```
+
+Produces a **native Windows executable** (`true-toto` or `true-toto.exe`).
+Runs in UCRT64, Git Bash, and CMD.
+
+### Git Bash caveat
+
+Git Bash can build if **`/c/msys64/ucrt64/bin` is early on `PATH`** (before
+Anaconda). Otherwise `gcc --version` may work while `cc1` fails silently (DLL
+load order). Prefer UCRT64 shell or:
+
+```bash
+PATH="/c/msys64/ucrt64/bin:$PATH" make
+```
+
+## Linking notes
+
+- Tests link `src/true_toto_cli.c` and `src/true_toto_emit.c` directly to
+  access `scan_meta_flags()` — no special inline-header trick is needed.
+- `main()` lives only in `src/main.c` and is **never** linked into the test
+  binary.
+- There is no `static inline` helper shared between the main binary and tests;
+  all testable logic is in normal `.c` translation units.
+

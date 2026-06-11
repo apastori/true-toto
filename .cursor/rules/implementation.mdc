@@ -1,0 +1,117 @@
+---
+description: Canonical C11 implementation for true-toto — module layout, argument parsing, output, and exit behaviour
+globs: ["src/**/*.c", "include/**/*.h"]
+alwaysApply: false
+---
+
+# true-toto — Implementation (C11)
+
+## Module layout
+
+| Path | Role |
+|------|------|
+| `include/true_toto.h` | `TRUE_TOTO_VERSION_STRING`, `TRUE_TOTO_EXIT_*` enum |
+| `include/true_toto_emit.h` | `true_toto_emit_error()` declaration |
+| `include/true_toto_cli.h` | `meta_flag` enum, `scan_meta_flags()`, `print_help()`, `print_version()` |
+| `src/main.c` | `main()` only — call `scan_meta_flags()`, dispatch, return `EXIT_SUCCESS` |
+| `src/true_toto_emit.c` | stderr diagnostics: `true-toto: <context>: <strerror(errno)>` |
+| `src/true_toto_cli.c` | Meta-flag scan, help/version text output |
+
+Each `.c` file opens with a **chain-of-thought comment block** (responsibility,
+syscalls used, heap usage, C standard). Preserve that pattern when adding
+files.
+
+## C standard
+
+**ISO C11** (`-std=c11`), `-D_POSIX_C_SOURCE=200809L` for POSIX.1-2008
+(`write`, etc.). MinGW builds define `_WIN32`; any platform-specific paths
+are guarded there.
+
+## Core behaviour
+
+`true-toto` does exactly one thing: exit with status `0`. There is no output,
+no loop, no buffer, and no signal handling required. The only non-trivial
+logic is the optional `--help` / `--version` dispatch in `main()`.
+
+## Argument parsing (`src/true_toto_cli.c`)
+
+1. Scan **all** `argv[1…]`: exact `--help` or `--h` anywhere → `META_HELP`
+   (**wins** over version; return immediately on first match).
+2. Else exact `--version` or `--v` anywhere → `META_VERSION`.
+3. Else (no args, unknown flags, arbitrary strings) → `META_NONE`.
+
+Strings like `--foo` or `-` are **silently ignored** (not errors). This
+matches GNU `true` behaviour.
+
+## `scan_meta_flags()` contract
+
+Declared in `include/true_toto_cli.h`:
+
+```c
+typedef enum {
+    META_NONE,
+    META_HELP,
+    META_VERSION
+} meta_flag;
+
+meta_flag scan_meta_flags(int argc, char *argv[]);
+```
+
+- Scans `argv[1…argc-1]`; `argv[0]` (program name) is never examined.
+- **Precondition:** `argc >= 1`, `argv` is a valid null-terminated array.
+- **Return:** `META_HELP` if any element is `--help` or `--h` (takes
+  precedence); `META_VERSION` if any element is `--version` or `--v` and no
+  help flag was found; `META_NONE` otherwise.
+- **Postcondition:** `META_NONE` never causes any output or side effects in
+  `main()`.
+- No dynamic allocation; no I/O.
+
+## Output (`src/true_toto_cli.c`)
+
+- `print_help()` writes help text to **stdout** via
+  `write(STDOUT_FILENO, …)`.
+- `print_version()` writes `true-toto <version>\n` to **stdout** via
+  `write(STDOUT_FILENO, …)`.
+- Both functions handle partial writes with a retry loop, matching the
+  coreutils-style write discipline.
+- On write failure: call `true_toto_emit_error("write")`, then exit
+  `TRUE_TOTO_EXIT_WRITE_ERR` (1).
+- No output on the `META_NONE` path.
+
+## Exit codes
+
+| Code | Constant | Meaning |
+|------|----------|---------|
+| `0` | `TRUE_TOTO_EXIT_OK` | Normal exit, `--help`, or `--version` |
+| `1` | `TRUE_TOTO_EXIT_WRITE_ERR` | Write failure when printing help or version |
+
+The exit code is `0` for every normal invocation — including any combination
+of arguments. Exit `1` is reserved exclusively for I/O failures during help or
+version output.
+
+## Error messages
+
+All diagnostics on **stderr**, one line:
+
+`true-toto: <context>: <strerror(errno)>`
+
+Never print errors to stdout.
+
+## No signal handling
+
+`true-toto` exits immediately after the optional output step. There is no
+loop to interrupt and no pipe to break. Do **not** add `SIGPIPE` or `SIGINT`
+handlers.
+
+## Memory
+
+No dynamic allocation. Stack only. No `malloc`, `calloc`, `realloc`, or
+`free`.
+
+## Naming
+
+Public entry points use the **`true_toto_`** prefix (e.g.
+`true_toto_emit_error`). CLI helpers (`scan_meta_flags`, `print_help`,
+`print_version`) are declared in `true_toto_cli.h` with no prefix — they are
+the canonical spec names for this module.
+
