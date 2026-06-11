@@ -16,6 +16,9 @@
 *.lib
 
 # Executables
+/true-toto
+/true-toto-debug
+/tests/test_core
 *.exe
 *.out
 *.app
