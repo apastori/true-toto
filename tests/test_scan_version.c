@@ -1,5 +1,5 @@
 /*
- * Responsibility: verify --version is detected as META_VERSION.
+ * Responsibility: verify --version is detected as TRUE_TOTO_VERSION.
  * Syscalls: none.
  * Heap: none — stack argv only.
  * C standard: ISO C11.
@@ -18,6 +18,6 @@ void test_scan_version(void)
     char version[] = "--version";
     char *argv[] = { prog, version };
 
-    assert(scan_meta_flags(2, argv) == META_VERSION);
-    printf("PASS: scan_meta_flags detects --version as META_VERSION\n");
+    assert(scan_meta_flags(2, argv) == TRUE_TOTO_VERSION);
+    printf("PASS: scan_meta_flags detects --version as TRUE_TOTO_VERSION\n");
 }

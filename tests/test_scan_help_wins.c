@@ -20,7 +20,7 @@ void test_scan_help_wins(void)
     char *argv_version_first[] = { prog, version, help };
     char *argv_help_first[] = { prog, help, version };
 
-    assert(scan_meta_flags(3, argv_version_first) == META_HELP);
-    assert(scan_meta_flags(3, argv_help_first) == META_HELP);
-    printf("PASS: scan_meta_flags gives META_HELP when both flags present\n");
+    assert(scan_meta_flags(3, argv_version_first) == TRUE_TOTO_HELP);
+    assert(scan_meta_flags(3, argv_help_first) == TRUE_TOTO_HELP);
+    printf("PASS: scan_meta_flags gives TRUE_TOTO_HELP when both flags present\n");
 }

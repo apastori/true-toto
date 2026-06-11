@@ -58,10 +58,10 @@ static int write_all(int fd, const char *buf, size_t len)
 
 /*
  * Preconditions: argc >= 1; argv is a valid null-terminated array.
- * Postcondition: META_NONE implies no output or side effects in main().
- * Return: META_HELP if any arg is --help or --h (takes precedence);
- *         META_VERSION if any arg is --version or --v and no help flag;
- *         META_NONE otherwise.
+ * Postcondition: TRUE_TOTO_NONE implies no output or side effects in main().
+ * Return: TRUE_TOTO_HELP if any arg is --help or --h (takes precedence);
+ *         TRUE_TOTO_VERSION if any arg is --version or --v and no help flag;
+ *         TRUE_TOTO_NONE otherwise.
  */
 true_toto_flag scan_meta_flags(int argc, char *argv[])
 {

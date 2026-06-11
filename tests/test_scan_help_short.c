@@ -1,5 +1,5 @@
 /*
- * Responsibility: verify --h is detected as META_HELP.
+ * Responsibility: verify --h is detected as TRUE_TOTO_HELP.
  * Syscalls: none.
  * Heap: none — stack argv only.
  * C standard: ISO C11.
@@ -18,6 +18,6 @@ void test_scan_help_short(void)
     char help[] = "--h";
     char *argv[] = { prog, help };
 
-    assert(scan_meta_flags(2, argv) == META_HELP);
-    printf("PASS: scan_meta_flags detects --h as META_HELP\n");
+    assert(scan_meta_flags(2, argv) == TRUE_TOTO_HELP);
+    printf("PASS: scan_meta_flags detects --h as TRUE_TOTO_HELP\n");
 }

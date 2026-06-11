@@ -1,5 +1,5 @@
 /*
- * Responsibility: verify unknown arguments are ignored (META_NONE).
+ * Responsibility: verify unknown arguments are ignored (TRUE_TOTO_NONE).
  * Syscalls: none.
  * Heap: none — stack argv only.
  * C standard: ISO C11.
@@ -19,6 +19,6 @@ void test_scan_ignored_args(void)
     char bar[] = "--bar";
     char *argv[] = { prog, foo, bar };
 
-    assert(scan_meta_flags(3, argv) == META_NONE);
+    assert(scan_meta_flags(3, argv) == TRUE_TOTO_NONE);
     printf("PASS: scan_meta_flags ignores unknown arguments\n");
 }
