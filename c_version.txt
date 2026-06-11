@@ -1,0 +1,48 @@
+true-toto — C language and toolchain notes
+==========================================
+
+Language standard
+-----------------
+ISO C11 (-std=c11)
+
+Required preprocessor define
+----------------------------
+_POSIX_C_SOURCE=200809L   (POSIX.1-2008: write, STDERR_FILENO, etc.)
+
+Compiler flags (release)
+------------------------
+-std=c11
+-Wall -Wextra -Wpedantic -Werror
+-D_POSIX_C_SOURCE=200809L
+-Iinclude
+-O2
+
+Debug flags (additional)
+------------------------
+-g -O1
+-fsanitize=address,undefined
+-fno-omit-frame-pointer
+
+Compiler selection
+----------------
+GNU Make picks gcc if available, otherwise clang.
+
+Linux
+-----
+Build with gcc or clang and GNU Make:
+
+    make clean && make && make test
+
+Windows
+-------
+Recommended: MSYS2 UCRT64 terminal with mingw-w64-ucrt-x86_64-gcc and make.
+
+    pacman -S make mingw-w64-ucrt-x86_64-gcc
+    make clean && make && make test
+
+Produces a native Windows .exe. Binaries are not portable across OSes —
+build separately on Linux and on Windows.
+
+Dependencies
+------------
+libc only. No extra -l flags.
