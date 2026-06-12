@@ -98,7 +98,8 @@ All diagnostics on **stderr**, one line:
 
 `true-toto: <context>: <strerror(errno)>`
 
-Never print errors to stdout.
+Never print errors to stdout. Stderr diagnostics use best-effort writes;
+if stderr is unavailable, the function returns without aborting.
 
 ## No signal handling
 
