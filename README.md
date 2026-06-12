@@ -1,9 +1,10 @@
 # true-toto
 
-A C11 replica of the GNU coreutils `true` command. `true-toto` exits
-immediately with status `0`, silently ignores every argument, and produces no
-output in normal operation. Useful in shell loops (`while true-toto`), as a
-no-op branch placeholder, and with `|| true-toto` to suppress `set -e` exits.
+A C11 GNU coreutils `true`-like command. `true-toto` exits immediately with
+status `0`. With no extra arguments it produces no output. With extra non-meta
+arguments it prints `true-toto: ignoring extra arguments` on stdout. Useful in
+shell loops (`while true-toto`), as a no-op branch placeholder, and with
+`|| true-toto` to suppress `set -e` exits.
 
 ## Build
 
@@ -46,20 +47,20 @@ PATH="/c/msys64/ucrt64/bin:$PATH" make
 | Invocation | Behaviour |
 |---|---|
 | `true-toto` | exits `0`; no output |
-| `true-toto any args` | exits `0`; all args ignored; no output |
+| `true-toto any args` | prints `true-toto: ignoring extra arguments`; exits `0` |
 | `true-toto --help` / `true-toto --h` | prints usage on stdout; exits `0` |
 | `true-toto --version` / `true-toto --v` | prints `true-toto <version>`; exits `0` |
 | `true-toto --help --version` | `--help` wins; prints usage; exits `0` |
 
-Single-dash `-h` and `-v` are **not** special — they are silently ignored
-like any other argument.
+Single-dash `-h` and `-v` are **not** special — they trigger the extra-args
+notice like any other non-meta argument.
 
 ## Exit codes
 
 | Code | Meaning |
 |---|---|
 | `0` | Normal exit, `--help`, `--version`, or any arguments |
-| `1` | Write failure when printing `--help` or `--version`; stderr format: `true-toto: <context>: <reason>` |
+| `1` | Write failure when printing `--help`, `--version`, or extra-args notice; stderr format: `true-toto: <context>: <reason>` |
 
 ## Layout
 
