@@ -10,5 +10,6 @@ typedef enum {
 true_toto_flag scan_meta_flags(int argc, char *argv[]);
 void print_help(void);
 void print_version(void);
+void print_extra_args_notice(void);
 
 #endif /* TRUE_TOTO_CLI_H */
