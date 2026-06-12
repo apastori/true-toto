@@ -22,6 +22,9 @@ int main(int argc, char *argv[])
             print_version();
             break;
         case TRUE_TOTO_NONE:
+            if (argc > 1) {
+                print_extra_args_notice();
+            }
             break;
     }
 

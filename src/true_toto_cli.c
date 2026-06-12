@@ -1,5 +1,6 @@
 /*
- * Responsibility: scan argv for meta flags; print help/version to stdout.
+ * Responsibility: scan argv for meta flags; print help/version/extra-args
+ * notice to stdout.
  * Syscalls: write(STDOUT_FILENO, …)
  * Heap: none — stack and static string literals only.
  * C standard: ISO C11 with POSIX.1-2008 (_POSIX_C_SOURCE=200809L).
@@ -22,6 +23,9 @@ static const char HELP_TEXT[] =
     "\n"
     "  --help        display this help and exit\n"
     "  --version     output version information and exit\n";
+
+static const char EXTRA_ARGS_TEXT[] =
+    "true-toto: ignoring extra arguments\n";
 
 static int is_help_flag(const char *arg)
 {
@@ -58,7 +62,8 @@ static int write_all(int fd, const char *buf, size_t len)
 
 /*
  * Preconditions: argc >= 1; argv is a valid null-terminated array.
- * Postcondition: TRUE_TOTO_NONE implies no output or side effects in main().
+ * Postcondition: scan_meta_flags() performs no I/O; main() may call
+ *         print_extra_args_notice() when TRUE_TOTO_NONE and argc > 1.
  * Return: TRUE_TOTO_HELP if any arg is --help or --h (takes precedence);
  *         TRUE_TOTO_VERSION if any arg is --version or --v and no help flag;
  *         TRUE_TOTO_NONE otherwise.
@@ -96,4 +101,10 @@ void print_version(void)
     (void)write_all(STDOUT_FILENO, prefix, sizeof(prefix) - 1U);
     (void)write_all(STDOUT_FILENO, TRUE_TOTO_VERSION_STRING, version_len);
     (void)write_all(STDOUT_FILENO, newline, sizeof(newline) - 1U);
+}
+
+void print_extra_args_notice(void)
+{
+    (void)write_all(STDOUT_FILENO, EXTRA_ARGS_TEXT,
+                    sizeof(EXTRA_ARGS_TEXT) - 1U);
 }
