@@ -47,7 +47,7 @@ Keep `README.md` user-focused. Align with `project-overview.mdc` and
 - `-Werror` flag rationale (lives in `Makefile` comments)
 - Author/licence banners on `--version` (binary prints `true-toto <version>`
   only)
-- Implementation detail of `scan_meta_flags()` or the `meta_flag` enum
+- Implementation detail of `scan_meta_flags()` or the `true_toto_flag` enum
 
 ## Style
 

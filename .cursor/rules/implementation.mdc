@@ -85,7 +85,7 @@ true_toto_flag scan_meta_flags(int argc, char *argv[]);
 
 | Code | Constant | Meaning |
 |------|----------|---------|
-| `0` | `TRUE_TOTO_EXIT_OK` | Normal exit, `--help`, or `--version` |
+| `0` | `TRUE_TOTO_EXIT_OK` | Normal exit, `--help`, `--version`, or extra-args notice |
 | `1` | `TRUE_TOTO_EXIT_WRITE_ERR` | Write failure when printing help, version, or extra-args notice |
 
 The exit code is `0` for every normal invocation — including any combination

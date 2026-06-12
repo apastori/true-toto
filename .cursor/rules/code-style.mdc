@@ -22,8 +22,9 @@ alwaysApply: false
 
 ## Module conventions
 
-- **`src/main.c`** stays thin — wiring only; dispatch help/version, then
-  `return EXIT_SUCCESS`. No business logic beyond flag dispatch.
+- **`src/main.c`** stays thin — wiring only; dispatch help, version, or
+  extra-args notice, then `return EXIT_SUCCESS`. No business logic beyond flag
+  dispatch.
 - **One concern per `src/true_toto_*.c`** — do not collapse back into a
   monolith without reason.
 - **Platform code:** use `#if defined(_WIN32)` / `#else` for OS-specific
@@ -34,12 +35,14 @@ alwaysApply: false
 | Kind | Style | Examples |
 |------|-------|----------|
 | Functions | `snake_case` | `scan_meta_flags`, `print_help`, `print_version` |
+| Enums / enum values | `snake_case` / `UPPER_SNAKE_CASE` | `true_toto_flag`, `TRUE_TOTO_HELP` |
 | Macros / constants | `UPPER_SNAKE_CASE` | `TRUE_TOTO_VERSION_STRING`, `TRUE_TOTO_EXIT_OK` |
 | Headers | `TRUE_TOTO_*_H` guards | `TRUE_TOTO_H`, `TRUE_TOTO_CLI_H` |
 
 Public API prefix: **`true_toto_`** for module entry points. Internal CLI
-helpers (`scan_meta_flags`, `print_help`, `print_version`) are declared in
-`true_toto_cli.h` and implemented in `true_toto_cli.c`.
+helpers (`scan_meta_flags`, `print_help`, `print_version`,
+`print_extra_args_notice`) are declared in `true_toto_cli.h` and implemented in
+`true_toto_cli.c`.
 
 ## Memory
 
@@ -48,11 +51,11 @@ helpers (`scan_meta_flags`, `print_help`, `print_version`) are declared in
 
 ## Output rules
 
-- **No output on the normal (no-flag) path.** `main()` returns `EXIT_SUCCESS`
-  without writing anything.
-- `--help` and `--version` text is written via `write(STDOUT_FILENO, …)` for
-  consistency with the coreutils-style family. Do not use `printf` /
-  `fprintf` / `fputs` for this output.
+- **No output when `argc == 1`.** Extra non-meta args trigger the fixed stdout
+  notice via `print_extra_args_notice()`. `main()` returns `EXIT_SUCCESS`.
+- `--help`, `--version`, and extra-args notice text is written via
+  `write(STDOUT_FILENO, …)` for consistency with the coreutils-style family.
+  Do not use `printf` / `fprintf` / `fputs` for this output.
 - On write failure: call `true_toto_emit_error`, then exit `1`.
 
 ## Errors
@@ -80,7 +83,8 @@ helpers (`scan_meta_flags`, `print_help`, `print_version`) are declared in
 - Do not compile as C++.
 - Do not link libraries beyond libc.
 - Do not use `gets`, unbounded `scanf`.
-- Do not add any output on the normal (no-flag) execution path.
+- Do not add stdout output beyond the documented help, version, and
+  extra-args notice paths.
 - Do not add `-h` / `-v` (single-dash) — only `--help`, `--h`, `--version`,
   and `--v` are special.
 - Do not add signal handlers — `true-toto` exits immediately and has no loop

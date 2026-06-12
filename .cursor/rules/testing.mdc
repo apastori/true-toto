@@ -20,13 +20,13 @@ unit-tested directly.
 | File | Role |
 |------|------|
 | `tests/test_runner.c` | `main()` — invokes all suites in fixed order |
-| `tests/test_scan_no_args.c` / `.h` | no `argv` entries → `META_NONE` |
-| `tests/test_scan_help.c` / `.h` | `--help` → `META_HELP` |
-| `tests/test_scan_help_short.c` / `.h` | `--h` → `META_HELP` |
-| `tests/test_scan_version.c` / `.h` | `--version` → `META_VERSION` |
-| `tests/test_scan_version_short.c` / `.h` | `--v` → `META_VERSION` |
-| `tests/test_scan_help_wins.c` / `.h` | `--version` and `--help` both present → `META_HELP` |
-| `tests/test_scan_ignored_args.c` / `.h` | arbitrary / unknown args → `META_NONE` |
+| `tests/test_scan_no_args.c` / `.h` | no `argv` entries → `TRUE_TOTO_NONE` |
+| `tests/test_scan_help.c` / `.h` | `--help` → `TRUE_TOTO_HELP` |
+| `tests/test_scan_help_short.c` / `.h` | `--h` → `TRUE_TOTO_HELP` |
+| `tests/test_scan_version.c` / `.h` | `--version` → `TRUE_TOTO_VERSION` |
+| `tests/test_scan_version_short.c` / `.h` | `--v` → `TRUE_TOTO_VERSION` |
+| `tests/test_scan_help_wins.c` / `.h` | `--version` and `--help` both present → `TRUE_TOTO_HELP` |
+| `tests/test_scan_ignored_args.c` / `.h` | arbitrary / unknown args → `TRUE_TOTO_NONE` |
 
 One scenario per `.c` / `.h` pair; headers declare the test function for
 `test_runner.c`.
@@ -52,16 +52,16 @@ binary.
 
 ## Required cases (behaviour)
 
-1. **No args:** `scan_meta_flags(1, {"prog"})` → `META_NONE`.
-2. **`--help`:** `scan_meta_flags(2, {"prog", "--help"})` → `META_HELP`.
-3. **`--h`:** `scan_meta_flags(2, {"prog", "--h"})` → `META_HELP`.
+1. **No args:** `scan_meta_flags(1, {"prog"})` → `TRUE_TOTO_NONE`.
+2. **`--help`:** `scan_meta_flags(2, {"prog", "--help"})` → `TRUE_TOTO_HELP`.
+3. **`--h`:** `scan_meta_flags(2, {"prog", "--h"})` → `TRUE_TOTO_HELP`.
 4. **`--version`:** `scan_meta_flags(2, {"prog", "--version"})` →
-   `META_VERSION`.
-5. **`--v`:** `scan_meta_flags(2, {"prog", "--v"})` → `META_VERSION`.
+   `TRUE_TOTO_VERSION`.
+5. **`--v`:** `scan_meta_flags(2, {"prog", "--v"})` → `TRUE_TOTO_VERSION`.
 6. **Help wins:** `scan_meta_flags(3, {"prog", "--version", "--help"})` →
-   `META_HELP`; also test the reversed order.
+   `TRUE_TOTO_HELP`; also test the reversed order.
 7. **Ignored args:** `scan_meta_flags(3, {"prog", "foo", "--bar"})` →
-   `META_NONE`.
+   `TRUE_TOTO_NONE`.
 
 ## Adding tests
 
@@ -82,7 +82,7 @@ After `make`:
 echo $?                        # expect 0, no output
 
 ./true-toto ignored args here
-echo $?                        # expect 0, no output
+echo $?                        # expect 0; prints: true-toto: ignoring extra arguments
 
 ./true-toto --version          # expect: true-toto <version>
 ./true-toto --v                # same
