@@ -1,11 +1,11 @@
 /*
- * Responsibility: entry point — dispatch meta flags, then exit successfully.
+ * Responsibility: entry point — dispatch meta flags, extra-args notice, then
+ * exit successfully.
  * Syscalls: none directly (delegated to true_toto_cli).
  * Heap: none.
  * C standard: ISO C11 with POSIX.1-2008 (_POSIX_C_SOURCE=200809L).
  */
 
-#include "true_toto.h"
 #include "true_toto_cli.h"
 
 #include <stdlib.h>
