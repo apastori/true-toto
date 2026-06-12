@@ -51,6 +51,7 @@ PATH="/c/msys64/ucrt64/bin:$PATH" make
 | `true-toto --help` / `true-toto --h` | prints usage on stdout; exits `0` |
 | `true-toto --version` / `true-toto --v` | prints `true-toto <version>`; exits `0` |
 | `true-toto --help --version` | `--help` wins; prints usage; exits `0` |
+| `true-toto --version --help` | `--help` wins; prints usage; exits `0` |
 
 Single-dash `-h` and `-v` are **not** special — they trigger the extra-args
 notice like any other non-meta argument.
