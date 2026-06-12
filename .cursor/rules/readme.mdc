@@ -12,7 +12,8 @@ Keep `README.md` user-focused. Align with `project-overview.mdc` and
 ## Required sections (order)
 
 1. **Title & description** — GNU `true`-like; exits immediately with status
-   `0`; silently ignores every argument; no output in normal operation. One
+   `0`; no output with zero extra args; prints a one-line notice when extra
+   non-meta arguments are present; help/version on `--help` / `--version`. One
    sentence on why that is useful (loops, `|| true`, no-op branches).
 
 2. **Build**
@@ -25,14 +26,14 @@ Keep `README.md` user-focused. Align with `project-overview.mdc` and
 
 3. **Usage**
    - No args → exits `0` silently
-   - Any args → exits `0` silently (all ignored)
+   - Extra non-meta args → exits `0`; prints `true-toto: ignoring extra arguments`
    - `--help` / `--h` and `--version` / `--v` (no single-dash `-h` / `-v`)
    - `--help` anywhere in argv wins over `--version`
 
 4. **Exit codes**
    - `0`: always — normal exit, `--help`, `--version`, or any arguments
-   - `1`: write failure when printing `--help` or `--version` text; stderr
-     format `true-toto: <context>: <reason>`
+   - `1`: write failure when printing `--help`, `--version`, or extra-args
+     notice; stderr format `true-toto: <context>: <reason>`
 
 5. **Layout** — brief tree matching actual repo (include `LICENSE.txt`,
    `c_version.txt`):

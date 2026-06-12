@@ -12,10 +12,10 @@ alwaysApply: false
 |------|------|
 | `include/true_toto.h` | `TRUE_TOTO_VERSION_STRING`, `TRUE_TOTO_EXIT_*` enum |
 | `include/true_toto_emit.h` | `true_toto_emit_error()` declaration |
-| `include/true_toto_cli.h` | `meta_flag` enum, `scan_meta_flags()`, `print_help()`, `print_version()` |
+| `include/true_toto_cli.h` | `true_toto_flag` enum, `scan_meta_flags()`, `print_help()`, `print_version()`, `print_extra_args_notice()` |
 | `src/main.c` | `main()` only — call `scan_meta_flags()`, dispatch, return `EXIT_SUCCESS` |
 | `src/true_toto_emit.c` | stderr diagnostics: `true-toto: <context>: <strerror(errno)>` |
-| `src/true_toto_cli.c` | Meta-flag scan, help/version text output |
+| `src/true_toto_cli.c` | Meta-flag scan, help/version/extra-args text output |
 
 Each `.c` file opens with a **chain-of-thought comment block** (responsibility,
 syscalls used, heap usage, C standard). Preserve that pattern when adding
@@ -29,19 +29,19 @@ are guarded there.
 
 ## Core behaviour
 
-`true-toto` does exactly one thing: exit with status `0`. There is no output,
-no loop, no buffer, and no signal handling required. The only non-trivial
-logic is the optional `--help` / `--version` dispatch in `main()`.
+`true-toto` exits with status `0`. With no extra arguments there is no output.
+When extra non-meta arguments are present, main prints a one-line notice. Help
+and version output are handled in `main()` via `scan_meta_flags()` dispatch.
 
 ## Argument parsing (`src/true_toto_cli.c`)
 
-1. Scan **all** `argv[1…]`: exact `--help` or `--h` anywhere → `META_HELP`
+1. Scan **all** `argv[1…]`: exact `--help` or `--h` anywhere → `TRUE_TOTO_HELP`
    (**wins** over version; return immediately on first match).
-2. Else exact `--version` or `--v` anywhere → `META_VERSION`.
-3. Else (no args, unknown flags, arbitrary strings) → `META_NONE`.
+2. Else exact `--version` or `--v` anywhere → `TRUE_TOTO_VERSION`.
+3. Else (no meta flags, unknown flags, arbitrary strings) → `TRUE_TOTO_NONE`.
 
-Strings like `--foo` or `-` are **silently ignored** (not errors). This
-matches GNU `true` behaviour.
+Strings like `--foo` or `-` are not errors. When the scan result is
+`TRUE_TOTO_NONE` and `argc > 1`, main prints the extra-args notice.
 
 ## `scan_meta_flags()` contract
 
@@ -49,22 +49,22 @@ Declared in `include/true_toto_cli.h`:
 
 ```c
 typedef enum {
-    META_NONE,
-    META_HELP,
-    META_VERSION
-} meta_flag;
+    TRUE_TOTO_NONE,
+    TRUE_TOTO_HELP,
+    TRUE_TOTO_VERSION
+} true_toto_flag;
 
-meta_flag scan_meta_flags(int argc, char *argv[]);
+true_toto_flag scan_meta_flags(int argc, char *argv[]);
 ```
 
 - Scans `argv[1…argc-1]`; `argv[0]` (program name) is never examined.
 - **Precondition:** `argc >= 1`, `argv` is a valid null-terminated array.
-- **Return:** `META_HELP` if any element is `--help` or `--h` (takes
-  precedence); `META_VERSION` if any element is `--version` or `--v` and no
-  help flag was found; `META_NONE` otherwise.
-- **Postcondition:** `META_NONE` never causes any output or side effects in
-  `main()`.
-- No dynamic allocation; no I/O.
+- **Return:** `TRUE_TOTO_HELP` if any element is `--help` or `--h` (takes
+  precedence); `TRUE_TOTO_VERSION` if any element is `--version` or `--v` and no
+  help flag was found; `TRUE_TOTO_NONE` otherwise.
+- **Postcondition:** `scan_meta_flags()` performs no I/O; when it returns
+  `TRUE_TOTO_NONE` and `argc > 1`, main calls `print_extra_args_notice()`.
+- No dynamic allocation; no I/O inside `scan_meta_flags()`.
 
 ## Output (`src/true_toto_cli.c`)
 
@@ -72,22 +72,25 @@ meta_flag scan_meta_flags(int argc, char *argv[]);
   `write(STDOUT_FILENO, …)`.
 - `print_version()` writes `true-toto <version>\n` to **stdout** via
   `write(STDOUT_FILENO, …)`.
-- Both functions handle partial writes with a retry loop, matching the
+- `print_extra_args_notice()` writes
+  `true-toto: ignoring extra arguments\n` to **stdout** via
+  `write(STDOUT_FILENO, …)` when main detects `TRUE_TOTO_NONE` and `argc > 1`.
+- All three functions handle partial writes with a retry loop, matching the
   coreutils-style write discipline.
 - On write failure: call `true_toto_emit_error("write")`, then exit
   `TRUE_TOTO_EXIT_WRITE_ERR` (1).
-- No output on the `META_NONE` path.
+- No output when invoked with zero extra arguments (`argc == 1`).
 
 ## Exit codes
 
 | Code | Constant | Meaning |
 |------|----------|---------|
 | `0` | `TRUE_TOTO_EXIT_OK` | Normal exit, `--help`, or `--version` |
-| `1` | `TRUE_TOTO_EXIT_WRITE_ERR` | Write failure when printing help or version |
+| `1` | `TRUE_TOTO_EXIT_WRITE_ERR` | Write failure when printing help, version, or extra-args notice |
 
 The exit code is `0` for every normal invocation — including any combination
-of arguments. Exit `1` is reserved exclusively for I/O failures during help or
-version output.
+of arguments. Exit `1` is reserved exclusively for I/O failures during stdout
+output.
 
 ## Error messages
 
@@ -112,6 +115,6 @@ No dynamic allocation. Stack only. No `malloc`, `calloc`, `realloc`, or
 
 Public entry points use the **`true_toto_`** prefix (e.g.
 `true_toto_emit_error`). CLI helpers (`scan_meta_flags`, `print_help`,
-`print_version`) are declared in `true_toto_cli.h` with no prefix — they are
-the canonical spec names for this module.
+`print_version`, `print_extra_args_notice`) are declared in `true_toto_cli.h`
+with no prefix — they are the canonical spec names for this module.
 

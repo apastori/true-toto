@@ -8,10 +8,10 @@ alwaysApply: true
 
 ## What This Project Is
 
-`true-toto` is a faithful CLI replica of the GNU Core Utilities `true` command.
-It exits immediately with status code `0` (success), ignores every argument
-passed to it, and produces no output — except when invoked with `--help` or
-`--version`.
+`true-toto` is a GNU Core Utilities `true`-like CLI. It exits immediately with
+status code `0` (success). With no extra arguments it produces no output.
+With extra non-meta arguments it prints a one-line notice on stdout. It also
+prints help or version text when invoked with `--help` or `--version`.
 
 ## Binary Name
 
@@ -34,25 +34,23 @@ Supporting behaviour:
 
 - Built-in `--help` / `--h` and `--version` / `--v` (detected anywhere in
   `argv`; help wins if both appear)
-- All other arguments (including `--foo`, `-`, arbitrary strings) are silently
-  ignored
+- Extra non-meta arguments (including `--foo`, `-`, arbitrary strings) are
+  ignored but trigger a one-line stdout notice when `argc > 1`
 
 **Do not add**:
 
 - Interactive or TUI modes
 - stdin reading
-- Any output on the normal (no-flag) execution path
-- Logging or debug output in normal operation
+- Logging or debug output beyond the fixed extra-args notice
 - Single-dash `-h` / `-v` (only `--help`, `--h`, `--version`, and `--v` are
   special)
-- Any feature that would break GNU `true` behavioural compatibility
 
 ## Behavioural Contract
 
 | Invocation | Behaviour |
 |---|---|
 | `true-toto` | exits `0` immediately; no output |
-| `true-toto any args here` | exits `0`; ignores all args; no output |
+| `true-toto any args here` | prints `true-toto: ignoring extra arguments\n`; exits `0` |
 | `true-toto --version` / `true-toto --v` | prints `true-toto <version>\n`, exits `0` |
 | `true-toto --help` / `true-toto --h` | prints usage on stdout, exits `0` |
 | `true-toto --help --version` | `--help` wins; prints usage, exits `0` |
@@ -63,7 +61,7 @@ Supporting behaviour:
 | Code | Meaning |
 |------|---------|
 | `0` | Always — normal exit, `--help`, `--version`, or any arguments |
-| `1` | Write failure when printing `--help` or `--version` text |
+| `1` | Write failure when printing `--help`, `--version`, or extra-args notice |
 
 ## Project Layout (summary)
 
